@@ -9,11 +9,11 @@ use model::pull_request_event::PullRequest;
 
 use crate::event_guard::{CommitEventType, PullRequestEventType};
 
-pub mod model;
-pub mod error;
-mod event_guard;
 mod authenticate;
 mod comment;
+pub mod error;
+mod event_guard;
+pub mod model;
 
 #[post("/", data = "<body>", format = "application/json")]
 async fn commit(_event: CommitEventType, body: Json<CommitEvent>) -> &'static str {
@@ -26,19 +26,17 @@ async fn commit(_event: CommitEventType, body: Json<CommitEvent>) -> &'static st
         let repo = &commit_event.repository.name;
         let installation_id = commit_event.installation.id;
 
-        let octo = authenticate::authenticate(installation_id, &repo)
+        let octo = authenticate::authenticate(installation_id, repo)
             .await
             .expect("Unable to authenticate");
 
-
-        let comment: String = conventional_commit_errors.iter()
+        let comment: String = conventional_commit_errors
+            .iter()
             .map(|report| report.to_string())
             .collect::<Vec<String>>()
             .join("\n");
 
-
-        let result = octo.issues(owner, repo)
-            .create_comment(1, comment).await;
+        let result = octo.issues(owner, repo).create_comment(1, comment).await;
         println!("{:?}", result);
     }
 

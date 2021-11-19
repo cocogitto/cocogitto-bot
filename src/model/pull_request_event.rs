@@ -6,7 +6,6 @@ pub struct PullRequest {
     action: PullRequestAction,
 }
 
-
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[serde(rename_all = "lowercase")]

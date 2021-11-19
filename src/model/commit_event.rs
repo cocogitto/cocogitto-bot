@@ -1,9 +1,9 @@
-use rocket::serde::Deserialize;
-use crate::model::repository::Repository;
 use crate::model::installation::Installation;
+use crate::model::repository::Repository;
+use conventional_commit_parser::parse;
+use rocket::serde::Deserialize;
 use std::fmt;
 use std::fmt::Formatter;
-use conventional_commit_parser::parse;
 
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -22,14 +22,12 @@ pub struct CommitErrorReport {
 
 impl fmt::Display for CommitErrorReport {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f,
+        writeln!(
+            f,
             r#"Commit {} by @{}  is not conform to the conventional commit specification :
 - **message:** {}
 - **cause:** `{}`"#,
-            self.sha,
-            self.author,
-            self.message,
-            self.error
+            self.sha, self.author, self.message, self.error
         )
     }
 }

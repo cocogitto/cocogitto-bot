@@ -1,14 +1,14 @@
-use rocket::{ Request};
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
+use rocket::Request;
 
-use crate::error::{ApiError};
+use crate::error::ApiError;
 
 pub struct CommitEventType;
 pub struct PullRequestEventType;
 
 #[rocket::async_trait]
-impl <'r> FromRequest<'r> for CommitEventType {
+impl<'r> FromRequest<'r> for CommitEventType {
     type Error = ApiError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -28,7 +28,7 @@ impl <'r> FromRequest<'r> for CommitEventType {
 }
 
 #[rocket::async_trait]
-impl <'r> FromRequest<'r> for PullRequestEventType {
+impl<'r> FromRequest<'r> for PullRequestEventType {
     type Error = ApiError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {

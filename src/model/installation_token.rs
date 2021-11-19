@@ -1,7 +1,6 @@
 use octocrab::models::Repository;
 use rocket::serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(crate = "rocket::serde")]
