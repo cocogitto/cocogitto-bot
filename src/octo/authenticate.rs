@@ -5,7 +5,8 @@ use octocrab::Octocrab;
 pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::Result<Octocrab> {
     let app_id = 151884;
 
-    let token = octocrab::auth::create_jwt(app_id.into(), "PRIVATE KEY HERE").unwrap();
+    let key = std::env::var("GITHUB_PRIVATE_KEY").expect("GITHUB_PRIVATE_KEY not set");
+    let token = octocrab::auth::create_jwt(app_id.into(), key).unwrap();
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
@@ -25,13 +26,6 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
     let mut create_access_token = CreateInstallationAccessToken::default();
     create_access_token.repositories = vec![repository.to_string()];
 
-    installations
-        .iter()
-        .for_each(|installation| println!("{:?}", installation));
-
-    println!("{:?}", installation);
-    println!("{:?}", create_access_token);
-
     let access: InstallationToken = octocrab
         .post(
             installation.access_tokens_url.as_ref().unwrap(),
@@ -40,10 +34,13 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
         .await
         .unwrap();
 
+
     let octocrab = octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
         .build()
         .unwrap();
+
+    info!("Authentication success for repo {} with installation id : {}",  repository, installation_id);
 
     Ok(octocrab)
 }

@@ -1,57 +1,74 @@
-#![feature(rustc_private)]
 #[macro_use]
 extern crate rocket;
 
+#[macro_use]
+extern crate log;
+
+
 use rocket::serde::json::Json;
 
-use model::commit_event::CommitEvent;
-use model::pull_request_event::PullRequest;
+use model::Commit;
+use model::github_event::pull_request_event::PullRequestEvent;
+use model::report::CommitReport;
+use octo::authenticate;
+use octo::commits::GetCommits;
 
-use crate::event_guard::{CommitEventType, PullRequestEventType};
+use crate::event_guard::PullRequestEventType;
+use crate::octo::check_run::CheckRunSummary;
 
-mod authenticate;
-mod comment;
-pub mod error;
+mod error;
 mod event_guard;
-pub mod model;
-
-#[post("/", data = "<body>", format = "application/json")]
-async fn commit(_event: CommitEventType, body: Json<CommitEvent>) -> &'static str {
-    let commit_event = body.into_inner();
-    println!("{:?}", commit_event);
-    let conventional_commit_errors = commit_event.extract_errors();
-
-    if !conventional_commit_errors.is_empty() {
-        let owner = &commit_event.repository.owner.name;
-        let repo = &commit_event.repository.name;
-        let installation_id = commit_event.installation.id;
-
-        let octo = authenticate::authenticate(installation_id, repo)
-            .await
-            .expect("Unable to authenticate");
-
-        let comment: String = conventional_commit_errors
-            .iter()
-            .map(|report| report.to_string())
-            .collect::<Vec<String>>()
-            .join("\n");
-
-        let result = octo.issues(owner, repo).create_comment(1, comment).await;
-        println!("{:?}", result);
-    }
-
-    "ok"
-}
-//https://api.github.com/repos/octocat/hello-world/pulls/42/comments
-//https://api.github.com/repos/cocogitto/cocogitto_bot_playground/pulls/1/comments
+mod model;
+mod octo;
+mod comment;
 
 #[post("/", data = "<body>", rank = 2, format = "application/json")]
-async fn pull_request(_event: PullRequestEventType, body: Json<PullRequest>) -> &'static str {
-    println!("{:?}", body.0);
+async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
+    let event = body.0;
+    let owner = &event.repository.owner.login;
+    let repo = &event.repository.name;
+    let pull_request_number = &event.number;
+    let installation_id = event.installation.id;
+
+
+    let octo = authenticate::authenticate(installation_id, repo)
+        .await
+        .expect("Unable to authenticate");
+
+    let issues = octo.issues(owner, repo).list_comments(*pull_request_number)
+        .page(1u32)
+        .send()
+        .await
+        .unwrap();
+
+    let previous_comment = issues.items.iter().find(|comment| comment.user.login == "cocogitto-bot[bot]");
+    if let Some(previous_comment) = previous_comment {
+        info!("Deleting comment {} in {}/{}#{}", previous_comment.id, owner, repo, pull_request_number);
+        octo.issues(owner, repo).delete_comment(previous_comment.id).await.unwrap();
+    }
+
+    let commits = octo.get_commits(owner, repo, *pull_request_number).await.unwrap();
+
+    let reports: Vec<CommitReport> = commits.iter()
+        .map(|commit| Commit::from(commit))
+        .map(Commit::into_report)
+        .collect();
+
+
+    let outcome = octo::check_run::per_commit_check_run(&octo, owner, repo, &commits).await.unwrap();
+    info!("Commit statuses checked in {}/{}#{}", owner, repo, pull_request_number);
+    let comment = match outcome {
+        CheckRunSummary::Errored => comment::build_comment_failure(reports),
+        CheckRunSummary::NoError => comment::build_comment_success(reports),
+    };
+
+    octo.issues(owner, repo).create_comment(*pull_request_number, &comment).await.unwrap();
+    info!("Comment summary sent to {}/{}#{}", owner, repo, pull_request_number);
+
     "ok"
 }
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![commit, pull_request])
+    rocket::build().mount("/", routes![pull_request])
 }
