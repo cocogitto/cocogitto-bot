@@ -1,18 +1,28 @@
 use octocrab::{models, Octocrab};
 use rocket::serde::{Deserialize, Serialize};
 
-use crate::model::Commit;
 use crate::model::report::CommitReport;
+use crate::model::Commit;
 use crate::octo::commits::CommitObjectDto;
 
 #[async_trait::async_trait]
 pub trait CheckRunExt {
-    async fn check_run(&self, owner: &str, repo: &str, check_run: &CheckRunResult) -> octocrab::Result<models::CheckRun>;
+    async fn check_run(
+        &self,
+        owner: &str,
+        repo: &str,
+        check_run: &CheckRunResult,
+    ) -> octocrab::Result<models::CheckRun>;
 }
 
 #[async_trait::async_trait]
 impl CheckRunExt for Octocrab {
-    async fn check_run(&self, owner: &str, repo: &str, check_run: &CheckRunResult) -> octocrab::Result<models::CheckRun> {
+    async fn check_run(
+        &self,
+        owner: &str,
+        repo: &str,
+        check_run: &CheckRunResult,
+    ) -> octocrab::Result<models::CheckRun> {
         let url = format!("/repos/{}/{}/check-runs", owner, repo);
         self.post(url, Some(check_run)).await
     }
@@ -44,20 +54,24 @@ pub enum CheckRunConclusion {
 
 pub enum CheckRunSummary {
     Errored,
-    NoError
+    NoError,
 }
 
 pub async fn per_commit_check_run(
     octo: &Octocrab,
     owner: &str,
     repo: &str,
-    commits: &Vec<CommitObjectDto>) -> octocrab::Result<CheckRunSummary> {
-    let mut reports: Vec<CommitReport> = commits.iter()
+    commits: &[CommitObjectDto],
+) -> octocrab::Result<CheckRunSummary> {
+    let mut reports: Vec<CommitReport> = commits
+        .iter()
         .map(Commit::from)
-        .map(CommitReport::from).collect();
+        .map(CommitReport::from)
+        .collect();
 
-    let has_failures = reports.iter().find(|report| matches!(report, CommitReport::Error(_)))
-        .is_some();
+    let has_failures = reports
+        .iter()
+        .any(|report| matches!(report, CommitReport::Error(_)));
 
     let previous_commits_reports: Vec<CommitReport> = reports.drain(0..reports.len() - 1).collect();
 
@@ -72,11 +86,9 @@ pub async fn per_commit_check_run(
 
         let text = match head {
             CommitReport::Success(_) => {
-                format!("Found non-compliant commits in the current pull request :\n")
+                "Found non-compliant commits in the current pull request :\n".to_string()
             }
-            CommitReport::Error(err) => {
-                err.to_string()
-            }
+            CommitReport::Error(err) => err.to_string(),
         };
 
         let final_run = CheckRunResult {
@@ -95,36 +107,31 @@ pub async fn per_commit_check_run(
     } else {
         Ok(CheckRunSummary::NoError)
     }
-
 }
 
 impl From<CommitReport> for CheckRunResult {
     fn from(report: CommitReport) -> Self {
         match report {
-            CommitReport::Success(commit) => {
-                CheckRunResult {
-                    output: CheckOutput {
-                        title: "Conventional commits check".to_string(),
-                        summary: "Success".to_string(),
-                        text: "".to_string(),
-                    },
-                    name: "Cog status check".to_string(),
-                    head_sha: commit.sha,
-                    conclusion: CheckRunConclusion::Success,
-                }
-            }
-            CommitReport::Error(report) => {
-                CheckRunResult {
-                    output: CheckOutput {
-                        title: "Conventional commits check".to_string(),
-                        summary: "Failure".to_string(),
-                        text: report.to_string(),
-                    },
-                    name: "Cog status check".to_string(),
-                    head_sha: report.sha,
-                    conclusion: CheckRunConclusion::Failure,
-                }
-            }
+            CommitReport::Success(commit) => CheckRunResult {
+                output: CheckOutput {
+                    title: "Conventional commits check".to_string(),
+                    summary: "Success".to_string(),
+                    text: "".to_string(),
+                },
+                name: "Cog status check".to_string(),
+                head_sha: commit.sha,
+                conclusion: CheckRunConclusion::Success,
+            },
+            CommitReport::Error(report) => CheckRunResult {
+                output: CheckOutput {
+                    title: "Conventional commits check".to_string(),
+                    summary: "Failure".to_string(),
+                    text: report.to_string(),
+                },
+                name: "Cog status check".to_string(),
+                head_sha: report.sha,
+                conclusion: CheckRunConclusion::Failure,
+            },
         }
     }
 }

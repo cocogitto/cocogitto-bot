@@ -1,14 +1,24 @@
-use octocrab::{Octocrab};
+use octocrab::Octocrab;
 use rocket::serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
 pub trait GetCommits {
-    async fn get_commits(&self, owner: &str, repo: &str, pr_number: u64) -> octocrab::Result<Vec<CommitObjectDto>>;
+    async fn get_commits(
+        &self,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> octocrab::Result<Vec<CommitObjectDto>>;
 }
 
 #[async_trait::async_trait]
 impl GetCommits for Octocrab {
-    async fn get_commits(&self, owner: &str, repo: &str, pr_number: u64) -> octocrab::Result<Vec<CommitObjectDto>> {
+    async fn get_commits(
+        &self,
+        owner: &str,
+        repo: &str,
+        pr_number: u64,
+    ) -> octocrab::Result<Vec<CommitObjectDto>> {
         let url = format!("/repos/{}/{}/pulls/{}/commits", owner, repo, pr_number);
         self.get(url, None::<&()>).await
     }

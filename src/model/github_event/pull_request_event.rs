@@ -10,21 +10,19 @@ pub struct PullRequestEvent {
     pub repository: PullRequestRepository,
     pub installation: Installation,
     pub pull_request: PullRequestEventInner,
-
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct PullRequestEventInner {
-    pub head: Head
+    pub head: Head,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Head {
-    pub sha: String
+    pub sha: String,
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]

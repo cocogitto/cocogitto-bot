@@ -34,13 +34,15 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
         .await
         .unwrap();
 
-
     let octocrab = octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
         .build()
         .unwrap();
 
-    info!("Authentication success for repo {} with installation id : {}",  repository, installation_id);
+    info!(
+        "Authentication success for repo {} with installation id : {}",
+        repository, installation_id
+    );
 
     Ok(octocrab)
 }

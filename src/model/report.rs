@@ -1,11 +1,11 @@
 use std::fmt;
 use std::fmt::Formatter;
 
-use conventional_commit_parser::parse;
 use crate::model::Commit;
-use indoc::formatdoc;
 use anyhow::anyhow;
 use conventional_commit_parser::error::ParseError;
+use conventional_commit_parser::parse;
+use indoc::formatdoc;
 
 #[derive(Debug)]
 pub enum CommitReport {
@@ -17,7 +17,7 @@ impl CommitReport {
     pub fn get_sha(&self) -> &str {
         match self {
             CommitReport::Success(commit) => &commit.sha,
-            CommitReport::Error(err) => &err.sha
+            CommitReport::Error(err) => &err.sha,
         }
     }
 }
@@ -31,7 +31,7 @@ impl From<Commit> for CommitReport {
                 author: commit.author,
                 message: commit.message,
                 error,
-            })
+            }),
         }
     }
 }
