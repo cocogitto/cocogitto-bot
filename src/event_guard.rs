@@ -14,12 +14,12 @@ impl<'r> FromRequest<'r> for PullRequestEventType {
         let event = req.headers().get_one("X-Github-Event");
 
         match event {
-            None => Outcome::Failure((Status::Ok, ApiError::UnmanagedEvent)),
+            None => Outcome::Failure((Status::Ok, ApiError::NotAGithubEvent)),
             Some(event) => {
                 if matches!(event, "pull_request") {
                     Outcome::Success(PullRequestEventType)
                 } else {
-                    Outcome::Failure((Status::Ok, ApiError::UnmanagedEvent))
+                    Outcome::Failure((Status::Ok, ApiError::UnmanagedEvent(event.to_string())))
                 }
             }
         }
