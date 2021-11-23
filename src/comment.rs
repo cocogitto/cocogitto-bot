@@ -38,15 +38,8 @@ pub fn build_comment_failure(reports: Vec<CommitReport>) -> String {
 }
 
 pub fn build_comment_success(reports: Vec<CommitReport>) -> String {
-    let report_list = reports
-        .iter()
-        .map(|report| format!("- {} :heavy_check_mark:", &report.get_sha()[0..7]))
-        .collect::<Vec<String>>()
-        .join("\n");
+    let start = &reports.first().unwrap().get_sha()[0..7];
+    let end = &reports.last().unwrap().get_sha()[0..7];
 
-    formatdoc!(
-        "Conventional commits check succeeded :
-                {}",
-        report_list
-    )
+    format!(":heavy_check_mark: {}...{} - Conventional commits check succeeded.", &start, end)
 }
