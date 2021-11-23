@@ -13,6 +13,7 @@ use octo::authenticate;
 use octo::commits::GetCommits;
 
 use crate::event_guard::PullRequestEventType;
+use crate::model::github_event::pull_request_event::PullRequestAction;
 use crate::octo::check_run::CheckRunSummary;
 
 mod comment;
@@ -24,6 +25,11 @@ mod octo;
 #[post("/", data = "<body>", rank = 2, format = "application/json")]
 async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
     let event = body.0;
+
+    if event.action == PullRequestAction::Closed {
+        return "ok";
+    };
+
     let owner = &event.repository.owner.login;
     let repo = &event.repository.name;
     let pull_request_number = &event.number;

@@ -24,12 +24,13 @@ pub struct Head {
     pub sha: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Eq, PartialOrd, PartialEq)]
 #[serde(crate = "rocket::serde")]
 #[serde(rename_all = "lowercase")]
 pub enum PullRequestAction {
     Synchronize,
     Opened,
+    Closed,
 }
 
 #[derive(Debug, Deserialize)]

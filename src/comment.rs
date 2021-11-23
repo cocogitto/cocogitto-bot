@@ -41,5 +41,8 @@ pub fn build_comment_success(reports: Vec<CommitReport>) -> String {
     let start = &reports.first().unwrap().get_sha()[0..7];
     let end = &reports.last().unwrap().get_sha()[0..7];
 
-    format!(":heavy_check_mark: {}...{} - Conventional commits check succeeded.", &start, end)
+    format!(
+        ":heavy_check_mark: {}...{} - Conventional commits check succeeded.",
+        &start, end
+    )
 }

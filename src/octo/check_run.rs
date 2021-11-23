@@ -85,7 +85,7 @@ pub async fn per_commit_check_run(
         let head = reports.get(0).unwrap();
 
         let text = match head {
-            CommitReport::Success(_) => {
+            CommitReport::Success(_) | CommitReport::Ignored(_) => {
                 "Found non-compliant commits in the current pull request :\n".to_string()
             }
             CommitReport::Error(err) => err.to_string(),
@@ -131,6 +131,16 @@ impl From<CommitReport> for CheckRunResult {
                 name: "Cog status check".to_string(),
                 head_sha: report.sha,
                 conclusion: CheckRunConclusion::Failure,
+            },
+            CommitReport::Ignored(commit) => CheckRunResult {
+                output: CheckOutput {
+                    title: "Conventional commits check".to_string(),
+                    summary: "Success".to_string(),
+                    text: "Merge commit are ignored from conventional commits check".to_string(),
+                },
+                name: "Cog status check".to_string(),
+                head_sha: commit.sha,
+                conclusion: CheckRunConclusion::Success,
             },
         }
     }

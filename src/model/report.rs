@@ -9,6 +9,7 @@ use indoc::formatdoc;
 
 #[derive(Debug)]
 pub enum CommitReport {
+    Ignored(Commit),
     Success(Commit),
     Error(CommitErrorReport),
 }
@@ -16,7 +17,7 @@ pub enum CommitReport {
 impl CommitReport {
     pub fn get_sha(&self) -> &str {
         match self {
-            CommitReport::Success(commit) => &commit.sha,
+            CommitReport::Success(commit) | CommitReport::Ignored(commit) => &commit.sha,
             CommitReport::Error(err) => &err.sha,
         }
     }
@@ -24,6 +25,10 @@ impl CommitReport {
 
 impl From<Commit> for CommitReport {
     fn from(commit: Commit) -> Self {
+        if commit.message.starts_with("Merge pull request") {
+            return CommitReport::Ignored(commit);
+        };
+
         match parse(&commit.message) {
             Ok(_) => CommitReport::Success(commit),
             Err(error) => CommitReport::Error(CommitErrorReport {
