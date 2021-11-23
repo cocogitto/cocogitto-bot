@@ -27,7 +27,7 @@ pub fn build_comment_failure(reports: Vec<CommitReport>) -> String {
     let error_reports = error_reports.join("\n");
 
     formatdoc!(
-        "Found {} compliant commit and {} non-compliant commits in {}.
+        ":x: Found {} compliant commit and {} non-compliant commits in {}.
 
         {}",
         success_commit_count,
