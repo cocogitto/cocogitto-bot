@@ -6,7 +6,11 @@ pub fn build_comment_failure(reports: Vec<CommitReport>) -> String {
     let start = reports.first().unwrap().get_sha();
     let end = reports.last().unwrap().get_sha();
 
-    let range = format!("{}...{}", start, end);
+    let range = if start == end {
+        format!("{}...{}", start, end)
+    } else {
+        format!("{}", start)
+    };
 
     let success_commit_count = reports
         .iter()
@@ -38,11 +42,19 @@ pub fn build_comment_failure(reports: Vec<CommitReport>) -> String {
 }
 
 pub fn build_comment_success(reports: Vec<CommitReport>) -> String {
-    let start = &reports.first().unwrap().get_sha()[0..7];
-    let end = &reports.last().unwrap().get_sha()[0..7];
+    let start = &reports.first().unwrap().get_sha();
+    let end = &reports.last().unwrap().get_sha();
 
-    format!(
-        ":heavy_check_mark: {}...{} - Conventional commits check succeeded.",
-        &start, end
-    )
+    if start == end {
+        format!(
+            ":heavy_check_mark: {} - Conventional commits check succeeded.",
+            &start[0..7]
+        )
+    } else {
+        format!(
+            ":heavy_check_mark: {}...{} - Conventional commits check succeeded.",
+            &start[0..7],
+            &end[0..7]
+        )
+    }
 }

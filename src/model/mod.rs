@@ -33,6 +33,11 @@ impl From<&CommitObjectDto> for Commit {
 impl Commit {
     pub fn into_report(self) -> CommitReport {
         let commit = self.clone();
+
+        if commit.message.starts_with("Merge pull request") {
+            return CommitReport::Ignored(commit);
+        };
+
         match parse(&self.message) {
             Ok(_) => CommitReport::Success(commit),
             Err(err) => CommitReport::Error(CommitErrorReport {
