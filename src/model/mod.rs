@@ -16,8 +16,14 @@ pub struct Commit {
 
 impl From<&CommitObjectDto> for Commit {
     fn from(dto: &CommitObjectDto) -> Self {
+        let author = dto
+            .author
+            .as_ref()
+            .map(|author| author.login.clone())
+            .unwrap_or_else(|| dto.commit.author.name.clone());
+
         Self {
-            author: dto.author.login.clone(),
+            author,
             sha: dto.sha.clone(),
             message: dto.commit.message.clone(),
         }

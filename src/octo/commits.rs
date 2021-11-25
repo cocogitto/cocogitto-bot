@@ -29,7 +29,7 @@ impl GetCommits for Octocrab {
 pub struct CommitObjectDto {
     pub sha: String,
     pub commit: CommitDto,
-    pub author: AuthorDto,
+    pub author: Option<AuthorDto>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,12 +37,19 @@ pub struct CommitObjectDto {
 pub struct CommitDto {
     pub message: String,
     pub tree: TreeDto,
+    pub author: AuthorInnerDto,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct AuthorDto {
     pub login: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct AuthorInnerDto {
+    pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
