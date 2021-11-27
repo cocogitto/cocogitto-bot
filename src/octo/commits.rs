@@ -1,4 +1,4 @@
-use octocrab::Octocrab;
+use octocrab::{Octocrab, Page};
 use rocket::serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
@@ -20,7 +20,16 @@ impl GetCommits for Octocrab {
         pr_number: u64,
     ) -> octocrab::Result<Vec<CommitObjectDto>> {
         let url = format!("/repos/{}/{}/pulls/{}/commits", owner, repo, pr_number);
-        self.get(url, None::<&()>).await
+        let mut current_page: Page<CommitObjectDto> = self.get(url, None::<&()>).await?;
+        let mut response = current_page.take_items();
+
+        while let Ok(Some(mut new_page)) = self.get_page(&current_page.next).await {
+            response.extend(new_page.take_items());
+
+            current_page = new_page;
+        }
+
+        Ok(response)
     }
 }
 
