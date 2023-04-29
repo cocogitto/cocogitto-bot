@@ -1,7 +1,6 @@
 [package]
-
 name = "cocogitto_github_app"
-version = "0.1.1"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/cocogitto/cocogitto-bot"
@@ -14,15 +13,14 @@ A pedantic conventional commit github bot powered by Cocogitto
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
 log = "0.4.14"
+cocogitto = { version = "5.4.0", default-features =  false, features = [] }
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
+octocrab = "0.28.0"
+async-trait = "0.1.51"
 indoc = "2.0.3"
 anyhow = "1.0.47"
 jsonwebtoken = "8"
-octocrab = "0.28.0"
-async-trait = "0.1.51"
-rocket = { version = "0.5.0-rc.1", features = ["json"] }
-cocogitto = { version = "5.4.0", default-features =  false, features = [] }
 
 [dev-dependencies]
 tokio-test = "0.4.2"
