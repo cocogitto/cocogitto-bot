@@ -23,6 +23,9 @@ mod event_guard;
 mod model;
 mod octo;
 
+#[get("/health")]
+async fn health() { () }
+
 #[post("/", data = "<body>", rank = 2, format = "application/json")]
 async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
     let event = body.0;
@@ -129,5 +132,5 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![pull_request])
+    rocket::build().mount("/", routes![pull_request, health])
 }
