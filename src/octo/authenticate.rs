@@ -6,7 +6,8 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
     let app_id = 151884;
 
     let key = std::env::var("GITHUB_PRIVATE_KEY").expect("GITHUB_PRIVATE_KEY not set");
-    let token = octocrab::auth::create_jwt(app_id.into(), key).unwrap();
+    let key = jsonwebtoken::EncodingKey::from_rsa_pem(key.as_bytes()).unwrap();
+    let token = octocrab::auth::create_jwt(app_id.into(), &key).unwrap();
 
     let octocrab = Octocrab::builder().personal_token(token).build()?;
 
