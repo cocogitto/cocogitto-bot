@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4.14"
+log = "0.4.17"
 conventional_commit_parser = "0.9.4"
 rocket = { version = "0.5.0-rc.3", features = ["json"] }
 octocrab = "0.21.0"
-async-trait = "0.1.51"
+async-trait = "0.1.68"
 indoc = "2.0.1"
-anyhow = "1.0.47"
+anyhow = "1.0.71"
 jsonwebtoken = "8.3.0"
 
 [dev-dependencies]
