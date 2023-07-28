@@ -6,6 +6,7 @@ extern crate log;
 
 use rocket::serde::json::Json;
 
+use cocogitto::settings::Settings;
 use model::github_event::pull_request_event::PullRequestEvent;
 use model::report::CommitReport;
 use model::Commit;
@@ -72,11 +73,28 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
         .await
         .unwrap();
 
+    // Check the target repo for an existing Cocogitto config file
+    let cog_file = octo
+        .repos(owner, repo)
+        .get_content()
+        .path("cog.toml")
+        .r#ref("main")
+        .send()
+        .await
+        .ok()
+        .and_then(|mut content| content.take_items().into_iter().next())
+        .and_then(|cog| cog.content)
+        .unwrap_or("".to_string());
+
+    // Parse the config file into Cocogitto `Settings` (falling
+    // back to the default if the target repo doesn't have a `cog.toml`)
+    let cog_config = Settings::try_from(cog_file).unwrap_or_else(|_| Settings::default());
+
     // Turn them into conventional commits report
     let reports: Vec<CommitReport> = commits
         .iter()
         .map(Commit::from)
-        .map(Commit::into_report)
+        .map(|commit| CommitReport::from_commit(commit, cog_config.ignore_merge_commits))
         .collect();
 
     // Send a github check-run for every single commit in the R
