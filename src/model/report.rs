@@ -3,11 +3,11 @@ use std::fmt::Formatter;
 
 use crate::model::Commit;
 use anyhow::anyhow;
-use conventional_commit_parser::error::ParseError;
-use conventional_commit_parser::parse;
+use cocogitto::conventional::commit::{verify, ConventionalCommitError};
 use indoc::formatdoc;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum CommitReport {
     Ignored(Commit),
     Success(Commit),
@@ -21,15 +21,13 @@ impl CommitReport {
             CommitReport::Error(err) => &err.sha,
         }
     }
-}
 
-impl From<Commit> for CommitReport {
-    fn from(commit: Commit) -> Self {
-        if commit.message.starts_with("Merge pull request") {
-            return CommitReport::Ignored(commit);
-        };
-
-        match parse(&commit.message) {
+    pub fn from_commit(commit: Commit, ignore_merge_commit: bool) -> Self {
+        match verify(
+            Some(commit.author.clone()),
+            commit.message.as_str(),
+            ignore_merge_commit,
+        ) {
             Ok(_) => CommitReport::Success(commit),
             Err(error) => CommitReport::Error(CommitErrorReport {
                 sha: commit.sha,
@@ -41,12 +39,18 @@ impl From<Commit> for CommitReport {
     }
 }
 
+impl From<Commit> for CommitReport {
+    fn from(commit: Commit) -> Self {
+        CommitReport::from_commit(commit, true)
+    }
+}
+
 #[derive(Debug)]
 pub struct CommitErrorReport {
     pub sha: String,
     pub author: String,
     pub message: String,
-    pub error: ParseError,
+    pub error: Box<ConventionalCommitError>,
 }
 
 impl fmt::Display for CommitErrorReport {
