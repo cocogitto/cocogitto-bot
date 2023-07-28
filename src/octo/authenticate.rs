@@ -1,16 +1,21 @@
 use crate::model::installation_token::InstallationToken;
+use jsonwebtoken::EncodingKey;
 use octocrab::params::apps::CreateInstallationAccessToken;
 use octocrab::Octocrab;
 
 pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::Result<Octocrab> {
     let app_id = 151884;
 
-    let key = std::env::var("GITHUB_PRIVATE_KEY").expect("GITHUB_PRIVATE_KEY not set");
-    let token = octocrab::auth::create_jwt(app_id.into(), key).unwrap();
+    let env_key = std::env::var("GITHUB_PRIVATE_KEY").expect("GITHUB_PRIVATE_KEY not set");
 
-    let octocrab = Octocrab::builder().personal_token(token).build()?;
+    let key = EncodingKey::from_rsa_pem(env_key.as_bytes())
+        .expect("Configured GitHub private key is not a valid PEM-encoded RSA key");
 
-    let installations = octocrab
+    let token = octocrab::auth::create_jwt(app_id.into(), &key).unwrap();
+
+    let temp_client = Octocrab::builder().personal_token(token).build()?;
+
+    let installations = temp_client
         .apps()
         .installations()
         .send()
@@ -26,7 +31,7 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
     let mut create_access_token = CreateInstallationAccessToken::default();
     create_access_token.repositories = vec![repository.to_string()];
 
-    let access: InstallationToken = octocrab
+    let access: InstallationToken = temp_client
         .post(
             installation.access_tokens_url.as_ref().unwrap(),
             Some(&create_access_token),
@@ -34,7 +39,7 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
         .await
         .unwrap();
 
-    let octocrab = octocrab::OctocrabBuilder::new()
+    let authed_client = octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
         .build()
         .unwrap();
@@ -44,5 +49,5 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
         repository, installation_id
     );
 
-    Ok(octocrab)
+    Ok(authed_client)
 }
