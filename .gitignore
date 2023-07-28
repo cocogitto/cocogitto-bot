@@ -1,3 +1,4 @@
 /target
 .idea
 .private_key
+.cargo/
