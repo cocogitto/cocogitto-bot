@@ -1,6 +1,4 @@
-use crate::model::report::{CommitErrorReport, CommitReport};
 use crate::octo::commits::CommitObjectDto;
-use conventional_commit_parser::parse;
 
 pub mod github_event;
 pub mod installation;
@@ -26,26 +24,6 @@ impl From<&CommitObjectDto> for Commit {
             author,
             sha: dto.sha.clone(),
             message: dto.commit.message.clone(),
-        }
-    }
-}
-
-impl Commit {
-    pub fn into_report(self) -> CommitReport {
-        let commit = self.clone();
-
-        if commit.message.starts_with("Merge pull request") {
-            return CommitReport::Ignored(commit);
-        };
-
-        match parse(&self.message) {
-            Ok(_) => CommitReport::Success(commit),
-            Err(err) => CommitReport::Error(CommitErrorReport {
-                sha: commit.sha,
-                author: commit.author,
-                message: commit.message,
-                error: err,
-            }),
         }
     }
 }
