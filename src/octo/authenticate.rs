@@ -1,6 +1,6 @@
-use octocrab::models::Installation;
 use crate::model::installation_token::InstallationToken;
 use jsonwebtoken::EncodingKey;
+use octocrab::models::Installation;
 use octocrab::params::apps::CreateInstallationAccessToken;
 use octocrab::Octocrab;
 
@@ -16,21 +16,19 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
 
     let temp_client = Octocrab::builder().personal_token(token).build()?;
 
-    let mut current_page = temp_client
-        .apps()
-        .installations()
-        .send()
-        .await?;
+    let mut current_page = temp_client.apps().installations().send().await?;
 
     let mut installations = current_page.take_items();
     let mut installation = None;
 
-    while let None = installation {
+    while installation.is_none() {
         installation = installations
             .into_iter()
             .find(|installation| installation.id.0 == installation_id);
 
-        installations = temp_client.get_page(&current_page.next).await?
+        installations = temp_client
+            .get_page(&current_page.next)
+            .await?
             .expect("Installation not found")
             .take_items();
     }

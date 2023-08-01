@@ -9,7 +9,7 @@ pub fn build_comment_failure(reports: Vec<CommitReport>) -> String {
     let range = if start == end {
         format!("{}...{}", start, end)
     } else {
-        format!("{}", start)
+        start.to_string()
     };
 
     let success_commit_count = reports

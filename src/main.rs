@@ -24,7 +24,7 @@ mod model;
 mod octo;
 
 #[get("/health")]
-async fn health() { () }
+async fn health() {}
 
 #[post("/", data = "<body>", rank = 2, format = "application/json")]
 async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
