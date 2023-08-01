@@ -14,7 +14,7 @@ A pedantic conventional commit github bot powered by Cocogitto
 
 [dependencies]
 log = "0.4.14"
-cocogitto = { version = "5.4.0", default-features =  false, features = [] }
+cocogitto = { git = "https://github.com/cocogitto/cocogitto", default-features =  false, features = [] }
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
 octocrab = "0.28.0"
 async-trait = "0.1.51"

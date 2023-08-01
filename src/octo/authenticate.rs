@@ -16,7 +16,7 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
 
     let temp_client = Octocrab::builder().personal_token(token).build()?;
 
-    let mut current_page = octocrab
+    let mut current_page = temp_client
         .apps()
         .installations()
         .send()
@@ -30,7 +30,7 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
             .into_iter()
             .find(|installation| installation.id.0 == installation_id);
 
-        installations = octocrab.get_page(&current_page.next).await?
+        installations = temp_client.get_page(&current_page.next).await?
             .expect("Installation not found")
             .take_items();
     }

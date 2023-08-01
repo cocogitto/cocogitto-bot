@@ -241,8 +241,7 @@ dependencies = [
 [[package]]
 name = "cocogitto"
 version = "5.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de39fc6e9dbfd7ef5c7e43fa1f0a2109891d0732eb04500081ecc01c12d4d03"
+source = "git+https://github.com/cocogitto/cocogitto#b2d36aa39d37bf6491fe3074ada401480d7832a6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -263,7 +262,7 @@ dependencies = [
  "stderrlog",
  "tempfile",
  "tera",
- "toml 0.7.6",
+ "toml 0.5.11",
  "which",
 ]
 
