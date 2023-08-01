@@ -40,7 +40,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
 
   arch-matrix:
-    needs: [lints, test]
+    needs: [lints]
     runs-on: ubuntu-latest
     env:
       CROSS_CONFIG: Cross.toml
