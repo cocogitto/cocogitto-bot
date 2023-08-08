@@ -81,7 +81,7 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
         .repos(owner, repo)
         .get_content()
         .path("cog.toml")
-        .r#ref("main")
+        .r#ref(&event.repository.default_branch)
         .send()
         .await
         .ok()
