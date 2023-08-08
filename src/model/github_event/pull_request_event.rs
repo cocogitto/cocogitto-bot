@@ -38,6 +38,7 @@ pub enum PullRequestAction {
 pub struct PullRequestRepository {
     pub name: String,
     pub owner: PullRequestOwner,
+    pub default_branch: String,
 }
 
 #[derive(Debug, Deserialize)]
