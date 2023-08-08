@@ -91,7 +91,10 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
 
     // Parse the config file into Cocogitto `Settings` (falling
     // back to the default if the target repo doesn't have a `cog.toml`)
-    let cog_config = Settings::try_from(cog_file).unwrap_or_else(|_| Settings::default());
+    let cog_config = Settings::try_from(cog_file).unwrap_or_else(|_| Settings {
+        ignore_merge_commits: true,
+        ..Settings::default()
+    });
 
     // Turn them into conventional commits report
     let reports: Vec<CommitReport> = commits
