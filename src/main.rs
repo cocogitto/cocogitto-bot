@@ -86,7 +86,7 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
         .await
         .ok()
         .and_then(|mut content| content.take_items().into_iter().next())
-        .and_then(|cog| cog.content)
+        .and_then(|cog| cog.decoded_content())
         .unwrap_or("".to_string());
 
     // Parse the config file into Cocogitto `Settings` (falling
