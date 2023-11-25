@@ -13,14 +13,26 @@ A pedantic conventional commit github bot powered by Cocogitto
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-log = "0.4.14"
-cocogitto = { git = "https://github.com/cocogitto/cocogitto", default-features =  false, features = [] }
-rocket = { version = "0.5.0-rc.1", features = ["json"] }
-octocrab = "0.28.0"
-async-trait = "0.1.51"
+cocogitto = { git = "https://github.com/cocogitto/cocogitto", default-features = false, features = [] }
+octocrab = { path = "../octocrab" }
 indoc = "2.0.3"
+jsonwebtoken = "9.1.0"
 anyhow = "1.0.47"
-jsonwebtoken = "8"
+
+axum = { version = "0.6.20", features = ["json"] }
+axum-macros = "0.3.7"
+axum-extra = "0.8.0"
+
+tower-http = { version = "0.4.4", features = ["trace"] }
+tokio = { version = "1.34.0", features = ["full"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+config = "0.13.4"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
+async-trait = "0.1.72"
+futures = "0.3.29"
 
 [dev-dependencies]
 tokio-test = "0.4.2"
+indoc = "2.0.4"

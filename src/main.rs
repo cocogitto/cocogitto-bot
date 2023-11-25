@@ -1,139 +1,82 @@
-#[macro_use]
-extern crate rocket;
+use axum::extract::State;
+use axum::http::HeaderMap;
 
-#[macro_use]
-extern crate log;
+use axum::routing::post;
+use axum::{Json, Router};
+use axum_macros::debug_handler;
 
-use rocket::serde::json::Json;
+use gh::event::{CheckSuiteAction, CheckSuiteEvent};
+use tower_http::trace::TraceLayer;
+use tracing::{info, warn};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
-use cocogitto::settings::Settings;
-use model::github_event::pull_request_event::PullRequestEvent;
-use model::report::CommitReport;
-use model::Commit;
-use octo::authenticate;
-use octo::commits::GetCommits;
+use crate::error::AppResult;
 
-use crate::event_guard::PullRequestEventType;
-use crate::model::github_event::pull_request_event::PullRequestAction;
-use crate::octo::check_run::CheckRunSummary;
+use crate::gh::CocogittoBot;
+use crate::settings::Settings;
 
-mod comment;
+mod cog;
 mod error;
-mod event_guard;
-mod model;
-mod octo;
+mod gh;
+mod settings;
 
-#[get("/health")]
-async fn health() {}
+#[derive(Clone)]
+pub struct AppState {
+    github_key: String,
+}
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| "cocogitto_github_app=debug,tower_http=debug".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
-#[post("/", data = "<body>", rank = 2, format = "application/json")]
-async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
-    let event = body.0;
+    let config = Settings::get()?;
+    let addr = config.address();
 
-    if event.action == PullRequestAction::Closed {
-        return "ok";
-    };
+    let router = Router::new()
+        .route("/", post(pull_request_handler))
+        .layer(TraceLayer::new_for_http())
+        .with_state(AppState {
+            github_key: config.github_private_key,
+        });
 
-    let owner = &event.repository.owner.login;
-    let repo = &event.repository.name;
-    let pull_request_number = &event.number;
-    let installation_id = event.installation.id;
+    axum::Server::bind(&addr)
+        .serve(router.into_make_service())
+        .await?;
 
-    let octo = authenticate::authenticate(installation_id, repo)
-        .await
-        .expect("Unable to authenticate");
-
-    // Get the comments for the current pull request
-    let issues = octo
-        .issues(owner, repo)
-        .list_comments(*pull_request_number)
-        .page(1u32)
-        .send()
-        .await
-        .unwrap();
-
-    // Try to find a previous cocogitto-bot comment
-    let previous_comment = issues
-        .items
-        .iter()
-        .find(|comment| comment.user.login == "cocogitto-bot[bot]");
-
-    // Delete this comment if found
-    if let Some(previous_comment) = previous_comment {
-        info!(
-            "Deleting comment {} in {}/{}#{}",
-            previous_comment.id, owner, repo, pull_request_number
-        );
-        octo.issues(owner, repo)
-            .delete_comment(previous_comment.id)
-            .await
-            .unwrap();
-    }
-
-    // Get all commits for the current pull request
-    let commits = octo
-        .get_commits(owner, repo, *pull_request_number)
-        .await
-        .unwrap();
-
-    // Check the target repo for an existing Cocogitto config file
-    let cog_file = octo
-        .repos(owner, repo)
-        .get_content()
-        .path("cog.toml")
-        .r#ref(&event.repository.default_branch)
-        .send()
-        .await
-        .ok()
-        .and_then(|mut content| content.take_items().into_iter().next())
-        .and_then(|cog| cog.decoded_content())
-        .unwrap_or("".to_string());
-
-    // Parse the config file into Cocogitto `Settings` (falling
-    // back to the default if the target repo doesn't have a `cog.toml`)
-    let cog_config = Settings::try_from(cog_file).unwrap_or_else(|_| Settings {
-        ignore_merge_commits: true,
-        ..Settings::default()
-    });
-
-    // Turn them into conventional commits report
-    let reports: Vec<CommitReport> = commits
-        .iter()
-        .map(Commit::from)
-        .map(|commit| CommitReport::from_commit(commit, cog_config.ignore_merge_commits))
-        .collect();
-
-    // Send a github check-run for every single commit in the R
-    let outcome = octo::check_run::per_commit_check_run(&octo, owner, repo, &commits)
-        .await
-        .unwrap();
-
-    info!(
-        "Commit statuses checked in {}/{}#{}",
-        owner, repo, pull_request_number
-    );
-
-    // Build check-run summary comment (failure if a single commit fails)
-    let comment = match outcome {
-        CheckRunSummary::Errored => comment::build_comment_failure(reports),
-        CheckRunSummary::NoError => comment::build_comment_success(reports),
-    };
-
-    // Send the comment
-    octo.issues(owner, repo)
-        .create_comment(*pull_request_number, &comment)
-        .await
-        .unwrap();
-
-    info!(
-        "Comment summary sent to {}/{}#{}",
-        owner, repo, pull_request_number
-    );
-
-    "ok"
+    Ok(())
 }
 
-#[launch]
-fn rocket() -> _ {
-    rocket::build().mount("/", routes![pull_request, health])
+#[debug_handler]
+async fn pull_request_handler(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(event): Json<CheckSuiteEvent>,
+) -> AppResult<()> {
+    let Some(event_header) = headers.get("X-Github-Event") else {
+        warn!("'X-Github-Event' header missing, ignoring request");
+        return Ok(());
+    };
+
+    let Ok("check_suite") = event_header.to_str() else {
+        info!("Ignoring non check_suite event");
+        return Ok(());
+    };
+
+    if event.action == CheckSuiteAction::Completed {
+        info!("Ignoring completed check_suite");
+        return Ok(());
+    }
+
+    CocogittoBot::from_check_suite(event, &state.github_key)
+        .await?
+        .run()
+        .await?;
+
+    Ok(())
 }
