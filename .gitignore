@@ -2,3 +2,4 @@
 .idea
 .private_key
 .cargo/
+config.toml

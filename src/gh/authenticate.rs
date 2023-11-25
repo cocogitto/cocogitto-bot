@@ -1,18 +1,26 @@
-use crate::model::installation_token::InstallationToken;
 use jsonwebtoken::EncodingKey;
 use octocrab::models::Installation;
 use octocrab::params::apps::CreateInstallationAccessToken;
 use octocrab::Octocrab;
+use serde::{Deserialize, Serialize};
+use tracing::info;
 
-pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::Result<Octocrab> {
-    let app_id = 151884;
+const COCOGITTO_BOT_APP_ID: u64 = 151884;
 
-    let env_key = std::env::var("GITHUB_PRIVATE_KEY").expect("GITHUB_PRIVATE_KEY not set");
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct InstallationToken {
+    pub token: String,
+}
 
-    let key = EncodingKey::from_rsa_pem(env_key.as_bytes())
+pub async fn authenticate(
+    installation_id: u64,
+    repository: &str,
+    gh_key: &str,
+) -> octocrab::Result<Octocrab> {
+    let key = EncodingKey::from_rsa_pem(gh_key.as_bytes())
         .expect("Configured GitHub private key is not a valid PEM-encoded RSA key");
 
-    let token = octocrab::auth::create_jwt(app_id.into(), &key).unwrap();
+    let token = octocrab::auth::create_jwt(COCOGITTO_BOT_APP_ID.into(), &key).unwrap();
 
     let temp_client = Octocrab::builder().personal_token(token).build()?;
 
@@ -42,13 +50,11 @@ pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::R
             installation.access_tokens_url.as_ref().unwrap(),
             Some(&create_access_token),
         )
-        .await
-        .unwrap();
+        .await?;
 
     let authed_client = octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
-        .build()
-        .unwrap();
+        .build()?;
 
     info!(
         "Authentication success for repo {} with installation id : {}",
