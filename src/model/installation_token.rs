@@ -1,9 +1,8 @@
 use octocrab::models::Repository;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-#[serde(crate = "rocket::serde")]
 #[non_exhaustive]
 pub struct InstallationToken {
     pub token: String,
@@ -15,7 +14,6 @@ pub struct InstallationToken {
 }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
 #[non_exhaustive]
 pub struct Permissions {
     #[serde(default)]

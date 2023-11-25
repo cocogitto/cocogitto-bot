@@ -1,5 +1,5 @@
 use octocrab::{Octocrab, Page};
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[async_trait::async_trait]
 pub trait GetCommits {
@@ -34,7 +34,6 @@ impl GetCommits for Octocrab {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
 pub struct CommitObjectDto {
     pub sha: String,
     pub commit: CommitDto,
@@ -42,7 +41,6 @@ pub struct CommitObjectDto {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
 pub struct CommitDto {
     pub message: String,
     pub tree: TreeDto,
@@ -50,19 +48,16 @@ pub struct CommitDto {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
 pub struct AuthorDto {
     pub login: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
 pub struct AuthorInnerDto {
     pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(crate = "rocket::serde")]
 pub struct TreeDto {
     sha: String,
 }

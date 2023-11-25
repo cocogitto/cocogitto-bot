@@ -1,9 +1,8 @@
-use rocket::serde::Deserialize;
+use serde::Deserialize;
 
 use crate::model::installation::Installation;
 
 #[derive(Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct PullRequestEvent {
     pub action: PullRequestAction,
     pub number: u64,
@@ -13,19 +12,16 @@ pub struct PullRequestEvent {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct PullRequestEventInner {
     pub head: Head,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct Head {
     pub sha: String,
 }
 
 #[derive(Debug, Deserialize, Eq, PartialOrd, PartialEq)]
-#[serde(crate = "rocket::serde")]
 #[serde(rename_all = "lowercase")]
 pub enum PullRequestAction {
     Synchronize,
@@ -34,7 +30,6 @@ pub enum PullRequestAction {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct PullRequestRepository {
     pub name: String,
     pub owner: PullRequestOwner,
@@ -42,7 +37,6 @@ pub struct PullRequestRepository {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct PullRequestOwner {
     pub login: String,
 }

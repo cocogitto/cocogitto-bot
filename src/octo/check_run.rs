@@ -1,5 +1,5 @@
 use octocrab::{models, Octocrab};
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::model::report::CommitReport;
 use crate::model::Commit;
@@ -29,7 +29,6 @@ impl CheckRunExt for Octocrab {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct CheckRunResult {
     pub output: CheckOutput,
     pub name: String,
@@ -38,7 +37,6 @@ pub struct CheckRunResult {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct CheckOutput {
     pub title: String,
     pub summary: String,
@@ -46,7 +44,7 @@ pub struct CheckOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
 pub enum CheckRunConclusion {
     Success,
     Failure,

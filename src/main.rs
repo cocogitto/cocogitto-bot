@@ -1,33 +1,32 @@
-#[macro_use]
-extern crate rocket;
+use axum::routing::post;
+use axum::{Json, Router, ServiceExt};
+use axum_macros::debug_handler;
+use std::net::SocketAddr;
 
-#[macro_use]
-extern crate log;
-
-use rocket::serde::json::Json;
-
-use cocogitto::settings::Settings;
+use cocogitto::settings::Settings as CogSettings;
 use model::github_event::pull_request_event::PullRequestEvent;
 use model::report::CommitReport;
 use model::Commit;
 use octo::authenticate;
 use octo::commits::GetCommits;
+use tower_http::trace::TraceLayer;
+use tracing::info;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
-use crate::event_guard::PullRequestEventType;
 use crate::model::github_event::pull_request_event::PullRequestAction;
 use crate::octo::check_run::CheckRunSummary;
+use crate::settings::Settings;
 
 mod comment;
 mod error;
 mod event_guard;
 mod model;
 mod octo;
+mod settings;
 
-#[get("/health")]
-async fn health() {}
-
-#[post("/", data = "<body>", rank = 2, format = "application/json")]
-async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>) -> &'static str {
+// #[post("/", data = "<body>", rank = 2, format = "application/json")]
+async fn pull_request(_event: (), body: Json<PullRequestEvent>) -> &'static str {
     let event = body.0;
 
     if event.action == PullRequestAction::Closed {
@@ -91,9 +90,9 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
 
     // Parse the config file into Cocogitto `Settings` (falling
     // back to the default if the target repo doesn't have a `cog.toml`)
-    let cog_config = Settings::try_from(cog_file).unwrap_or_else(|_| Settings {
+    let cog_config = CogSettings::try_from(cog_file).unwrap_or_else(|_| CogSettings {
         ignore_merge_commits: true,
-        ..Settings::default()
+        ..CogSettings::default()
     });
 
     // Turn them into conventional commits report
@@ -133,7 +132,27 @@ async fn pull_request(_event: PullRequestEventType, body: Json<PullRequestEvent>
     "ok"
 }
 
-#[launch]
-fn rocket() -> _ {
-    rocket::build().mount("/", routes![pull_request, health])
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let config = Settings::get()?;
+
+    let router = Router::new()
+        .route("/", post(pull_request_handler))
+        .layer(TraceLayer::new_for_http());
+
+    axum::Server::bind(&config.address())
+        .serve(router.into_make_service())
+        .await?;
+
+    Ok(())
 }
+
+#[debug_handler]
+async fn pull_request_handler(dum: String) -> () {}

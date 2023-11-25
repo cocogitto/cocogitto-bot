@@ -3,6 +3,7 @@ use jsonwebtoken::EncodingKey;
 use octocrab::models::Installation;
 use octocrab::params::apps::CreateInstallationAccessToken;
 use octocrab::Octocrab;
+use tracing::info;
 
 pub async fn authenticate(installation_id: u64, repository: &str) -> octocrab::Result<Octocrab> {
     let app_id = 151884;

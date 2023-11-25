@@ -1,4 +1,4 @@
-use rocket::http::Status;
+/*use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::Request;
 
@@ -25,3 +25,4 @@ impl<'r> FromRequest<'r> for PullRequestEventType {
         }
     }
 }
+*/
