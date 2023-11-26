@@ -1,11 +1,12 @@
-use config::{Config, ConfigBuilder, ConfigError, File, FileFormat};
+use config::{Config, ConfigError, File, FileFormat};
 use serde::Deserialize;
-use std::net::SocketAddr;
+use std::net::{Ipv4Addr, SocketAddr};
 
 #[derive(Deserialize)]
 pub struct Settings {
-    address: SocketAddr,
+    address: String,
     port: u16,
+    pub github_private_key: String,
 }
 
 impl Settings {
@@ -18,9 +19,8 @@ impl Settings {
     }
 
     pub fn address(&self) -> SocketAddr {
-        let mut addr = self.address.clone();
-        addr.set_port(self.port);
-        addr
+        let addr: Ipv4Addr = self.address.parse().expect("Valid socket address");
+        SocketAddr::new(addr.into(), self.port)
     }
 }
 

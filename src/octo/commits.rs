@@ -56,7 +56,6 @@ pub struct AuthorDto {
 pub struct AuthorInnerDto {
     pub name: String,
 }
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TreeDto {
     sha: String,

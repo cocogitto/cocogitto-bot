@@ -34,3 +34,4 @@ async-trait = "0.1.72"
 
 [dev-dependencies]
 tokio-test = "0.4.2"
+indoc = "2.0.4"
