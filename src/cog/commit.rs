@@ -1,9 +1,4 @@
-use crate::octo::commits::CommitObjectDto;
-
-pub mod github_event;
-pub mod installation;
-pub mod installation_token;
-pub mod report;
+use octocrab::models::repos::RepoCommit;
 
 #[derive(Debug, Clone)]
 pub struct Commit {
@@ -12,13 +7,13 @@ pub struct Commit {
     pub message: String,
 }
 
-impl From<&CommitObjectDto> for Commit {
-    fn from(dto: &CommitObjectDto) -> Self {
+impl From<&RepoCommit> for Commit {
+    fn from(dto: &RepoCommit) -> Self {
         let author = dto
             .author
             .as_ref()
             .map(|author| author.login.clone())
-            .unwrap_or_else(|| dto.commit.author.name.clone());
+            .unwrap_or_else(|| dto.commit.author.clone().unwrap().user.name.clone());
 
         Self {
             author,
