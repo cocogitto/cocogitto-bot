@@ -1,11 +1,11 @@
 use serde::Deserialize;
 
-pub mod pull_request_event;
-
 #[derive(Debug, Deserialize)]
 pub struct CheckSuiteEvent {
     pub action: CheckSuiteAction,
     pub check_suite: CheckSuitePayload,
+    pub repository: Repository,
+    pub installation: Installation,
 }
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
@@ -15,11 +15,11 @@ pub enum CheckSuiteAction {
     ReRequested,
     Completed,
 }
+
 #[derive(Debug, Deserialize)]
 pub struct CheckSuitePayload {
-    pub repository: Repository,
-    pub pull_request: Vec<PullRequest>,
-    pub installation: Installation,
+    pub pull_requests: Vec<PullRequest>,
+    pub head_sha: String,
 }
 
 #[derive(Debug, Deserialize)]

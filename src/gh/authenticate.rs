@@ -1,11 +1,16 @@
-use crate::model::installation_token::InstallationToken;
 use jsonwebtoken::EncodingKey;
 use octocrab::models::Installation;
 use octocrab::params::apps::CreateInstallationAccessToken;
 use octocrab::Octocrab;
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
 const COCOGITTO_BOT_APP_ID: u64 = 151884;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct InstallationToken {
+    pub token: String,
+}
 
 pub async fn authenticate(
     installation_id: u64,
@@ -45,13 +50,11 @@ pub async fn authenticate(
             installation.access_tokens_url.as_ref().unwrap(),
             Some(&create_access_token),
         )
-        .await
-        .unwrap();
+        .await?;
 
     let authed_client = octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
-        .build()
-        .unwrap();
+        .build()?;
 
     info!(
         "Authentication success for repo {} with installation id : {}",

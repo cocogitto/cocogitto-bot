@@ -2,9 +2,10 @@ use axum::extract::State;
 use axum::http::HeaderMap;
 
 use axum::routing::post;
-use axum::{Json, Router, ServiceExt};
+use axum::{Json, Router};
 use axum_macros::debug_handler;
 
+use gh::event::{CheckSuiteAction, CheckSuiteEvent};
 use tower_http::trace::TraceLayer;
 use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
@@ -12,14 +13,12 @@ use tracing_subscriber::util::SubscriberInitExt;
 
 use crate::error::AppResult;
 
-use crate::model::github_event::{CheckSuiteAction, CheckSuiteEvent};
-use crate::octo::CocogittoBot;
+use crate::gh::CocogittoBot;
 use crate::settings::Settings;
 
-mod comment;
+mod cog;
 mod error;
-mod model;
-mod octo;
+mod gh;
 mod settings;
 
 #[derive(Clone)]
@@ -31,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "cocogitto_github_app=info,tower_http=debug".into()),
+                .unwrap_or_else(|_| "cocogitto_github_app=debug,tower_http=debug".into()),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -74,11 +73,11 @@ async fn pull_request_handler(
         return Ok(());
     }
 
-    if event.check_suite.pull_request.is_empty() {
+    if event.check_suite.pull_requests.is_empty() {
         info!("Ignoring check_suite with no pull request");
     }
 
-    CocogittoBot::from_check_suite(event.check_suite, &state.github_key)
+    CocogittoBot::from_check_suite(event, &state.github_key)
         .await?
         .run()
         .await?;
