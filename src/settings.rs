@@ -1,4 +1,4 @@
-use config::{Config, ConfigError, File, FileFormat};
+use config::{Config, ConfigError, Environment, File, FileFormat};
 use serde::Deserialize;
 use std::net::{Ipv4Addr, SocketAddr};
 
@@ -13,6 +13,7 @@ impl Settings {
     pub fn get() -> Result<Self, ConfigError> {
         let config = Config::builder()
             .add_source(File::new("config.toml", FileFormat::Toml))
+            .add_source(Environment::with_prefix("COG"))
             .build()?;
 
         config.try_deserialize()

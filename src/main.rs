@@ -1,7 +1,9 @@
+use autometrics::prometheus_exporter::PrometheusResponse;
+use autometrics::{autometrics, prometheus_exporter};
 use axum::extract::State;
 use axum::http::HeaderMap;
 
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_macros::debug_handler;
 
@@ -27,6 +29,12 @@ pub struct AppState {
 }
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    vergen::EmitBuilder::builder()
+        .git_sha(true)
+        .git_branch()
+        .emit()
+        .expect("Unable to generate build info");
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG")
@@ -34,6 +42,8 @@ async fn main() -> anyhow::Result<()> {
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    prometheus_exporter::init();
 
     let config = Settings::get()?;
     let addr = config.address();
@@ -43,7 +53,11 @@ async fn main() -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http())
         .with_state(AppState {
             github_key: config.github_private_key,
-        });
+        })
+        .route(
+            "/metrics",
+            get(|| async { prometheus_exporter::encode_http_response() }),
+        );
 
     axum::Server::bind(&addr)
         .serve(router.into_make_service())
@@ -53,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[debug_handler]
+#[autometrics]
 async fn pull_request_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -79,4 +94,8 @@ async fn pull_request_handler(
         .await?;
 
     Ok(())
+}
+
+pub fn get_metrics() -> PrometheusResponse {
+    prometheus_exporter::encode_http_response()
 }

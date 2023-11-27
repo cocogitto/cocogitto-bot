@@ -21,7 +21,7 @@ USER cocogitto
 COPY --from=builder /cocogitto_github_app /usr/bin/cocogitto_github_app
 
 # Install assets
-COPY Rocket.toml .
+COPY config.toml .
 
 EXPOSE 8080
 
