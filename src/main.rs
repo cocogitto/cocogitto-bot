@@ -29,12 +29,6 @@ pub struct AppState {
 }
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    vergen::EmitBuilder::builder()
-        .git_sha(true)
-        .git_branch()
-        .emit()
-        .expect("Unable to generate build info");
-
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG")
