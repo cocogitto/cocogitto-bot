@@ -119,14 +119,14 @@ jobs:
           chmod +x -R  target/x86_64-unknown-linux-musl/release
         working-directory: ./
 
-      - if: ${{ github.ref_type }} == 'tag'
+      - if: ${{ github.ref_type == 'tag' }}
         name: Update multi-arch container latest
         run: |
           docker buildx build \
           --push --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
           . -t ghcr.io/cocogitto-bot:${{ github.ref_name }}
 
-      - if: ${{ github.ref_type }} == 'branch'
+      - if: ${{ github.ref_type == 'branch' }}
         name: Update multi-arch container latest
         run: |
           docker buildx build \
