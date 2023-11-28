@@ -124,11 +124,11 @@ jobs:
         run: |
           docker buildx build \
           --push --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
-          . -t ghcr.io/cocogitto-bot:${{ github.ref_name }}
+          -t ghcr.io/cocogitto/cocogitto-bot:${{ github.ref_name }} .
 
       - if: ${{ github.ref_type == 'branch' }}
         name: Update multi-arch container latest
         run: |
           docker buildx build \
           --push --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
-          . -t ghcr.io/cocogitto-bot:latest
+          -t ghcr.io/cocogitto/cocogitto-bot:latest .
