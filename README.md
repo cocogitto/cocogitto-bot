@@ -7,3 +7,9 @@ This bot uses cocogitto to perform [status checks](https://docs.github.com/en/pu
 On failure, your pull-request will be decorated with a comment explaining what went wrong regarding the specification :
 
 ![example screenshot](https://docs.cocogitto.io/cog-bot-example.png)
+
+### Installation
+
+To install it just go to [github.com/apps/cocogitto-bot](https://github.com/apps/cocogitto-bot)
+and click "Configure". Add the desired repository and grant the required permission.
+Once it is done cocogitto-bot will comment on every pull-request events.
