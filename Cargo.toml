@@ -19,7 +19,6 @@ anyhow = "1.0.47"
 
 axum = { version = "0.6.20", features = ["json"] }
 axum-macros = "0.3.7"
-axum-extra = "0.8.0"
 autometrics = { version = "0.6.0", features = ["prometheus-exporter"] }
 
 tower-http = { version = "0.4.4", features = ["trace"] }
@@ -30,7 +29,6 @@ config = "0.13.4"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 async-trait = "0.1.72"
-futures = "0.3.29"
 
 [build-dependencies]
 vergen = { version = "8.1", features = ["git", "gitcl"] }
