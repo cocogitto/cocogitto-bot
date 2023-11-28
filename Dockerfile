@@ -20,13 +20,10 @@ USER cocogitto
 # Install binaries
 COPY --from=builder /cocogitto_github_app /usr/bin/cocogitto_github_app
 
-# Install assets
-COPY config.toml .
-
 EXPOSE 8080
 
 COPY ./docker/entrypoint.sh /entrypoint.sh
-COPY ./Rocket.toml .
+COPY ./config.example.toml ./config.toml
 
 CMD ["cocogitto_github_app"]
 ENTRYPOINT ["/entrypoint.sh"]
