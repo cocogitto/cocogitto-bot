@@ -4,9 +4,12 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
   pull_request:
     branches:
       - main
+
 jobs:
   lints:
     name: Format & Lint
@@ -107,7 +110,15 @@ jobs:
           chmod +x -R  target/x86_64-unknown-linux-musl/release
         working-directory: ./
 
-      - name: Update multi-arch container latest
+      - if: ${{ github.ref_type }} == 'tag'
+        name: Update multi-arch container latest
+        run: |
+          docker buildx build \
+          --push --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
+          . -t oknozor/cocogitto_github_app:${{ github.ref_name }}
+
+      - if: ${{ github.ref_type }} == 'branch'
+        name: Update multi-arch container latest
         run: |
           docker buildx build \
           --push --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
