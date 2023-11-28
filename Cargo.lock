@@ -372,12 +372,13 @@ dependencies = [
 [[package]]
 name = "cocogitto"
 version = "5.6.0"
-source = "git+https://github.com/cocogitto/cocogitto#891d55b2293d10d556455ad4cadb75e19b2ac819"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "740eb15ed4ed68aa49b3eacda43fb4646c045de132f06ea5a27601300efe20ec"
 dependencies = [
  "anyhow",
  "chrono",
  "colored",
- "config",
+ "config 0.12.0",
  "conventional_commit_parser",
  "edit",
  "git2",
@@ -394,7 +395,7 @@ dependencies = [
  "tempfile",
  "tera",
  "toml",
- "which 5.0.0",
+ "which",
 ]
 
 [[package]]
@@ -408,7 +409,7 @@ dependencies = [
  "axum-extra",
  "axum-macros",
  "cocogitto",
- "config",
+ "config 0.13.4",
  "futures",
  "indoc",
  "jsonwebtoken",
@@ -432,6 +433,20 @@ dependencies = [
  "is-terminal",
  "lazy_static",
  "windows-sys",
+]
+
+[[package]]
+name = "config"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54ad70579325f1a38ea4c13412b82241c5900700a69785d73e2736bd65a33f86"
+dependencies = [
+ "async-trait",
+ "lazy_static",
+ "nom",
+ "pathdiff",
+ "serde",
+ "toml",
 ]
 
 [[package]]
@@ -581,7 +596,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c562aa71f7bc691fde4c6bf5f93ae5a5298b617c2eb44c76c87832299a17fbb4"
 dependencies = [
  "tempfile",
- "which 4.4.2",
+ "which",
 ]
 
 [[package]]
@@ -2826,19 +2841,6 @@ dependencies = [
  "home",
  "once_cell",
  "rustix",
-]
-
-[[package]]
-name = "which"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bf3ea8596f3a0dd5980b46430f2058dfe2c36a27ccfbb1845d6fbfcd9ba6e14"
-dependencies = [
- "either",
- "home",
- "once_cell",
- "rustix",
- "windows-sys",
 ]
 
 [[package]]

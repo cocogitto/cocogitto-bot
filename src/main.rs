@@ -2,19 +2,17 @@ use autometrics::prometheus_exporter::PrometheusResponse;
 use autometrics::{autometrics, prometheus_exporter};
 use axum::extract::State;
 use axum::http::HeaderMap;
-
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_macros::debug_handler;
-
-use gh::event::{CheckSuiteAction, CheckSuiteEvent};
 use tower_http::trace::TraceLayer;
 use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-use crate::error::AppResult;
+use gh::event::{CheckSuiteAction, CheckSuiteEvent};
 
+use crate::error::AppResult;
 use crate::gh::CocogittoBot;
 use crate::settings::Settings;
 
@@ -37,6 +35,7 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    info!("Initializing prometheus exporter");
     prometheus_exporter::init();
 
     let config = Settings::get()?;
@@ -48,11 +47,10 @@ async fn main() -> anyhow::Result<()> {
         .with_state(AppState {
             github_key: config.github_private_key,
         })
-        .route(
-            "/metrics",
-            get(|| async { prometheus_exporter::encode_http_response() }),
-        );
+        .route("/health", get(get_health))
+        .route("/metrics", get(get_metrics));
 
+    info!("Serving cocogitto bot at {}", &addr);
     axum::Server::bind(&addr)
         .serve(router.into_make_service())
         .await?;
@@ -90,6 +88,12 @@ async fn pull_request_handler(
     Ok(())
 }
 
-pub fn get_metrics() -> PrometheusResponse {
+#[debug_handler]
+pub async fn get_metrics() -> PrometheusResponse {
     prometheus_exporter::encode_http_response()
+}
+
+#[debug_handler]
+pub async fn get_health() -> AppResult<()> {
+    Ok(())
 }
