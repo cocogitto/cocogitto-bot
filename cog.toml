@@ -1,8 +1,11 @@
+branch_whitelist = ["main"]
+ignore_merge_commits = true
+
 pre_bump_hooks = [
     "cargo build --release",
     "cargo clippy",
     "cargo fmt --all",
-    "cargo bump {{version}}",
+    "cargo set-version {{version}}",
 ]
 
 post_bump_hooks = [
@@ -15,6 +18,24 @@ template = "remote"
 remote = "github.com"
 owner = "cocogitto"
 repository = "cocogitto-bot"
+
 authors = [
     { signature = "Paul Delafosse", username = "oknozor" },
 ]
+
+[git_hooks.commit-msg]
+script = """#!/bin/sh
+set -e
+
+echo "[Check current commit message]"
+cog verify --file $1
+
+echo "[Conventional commit check]"
+cog check
+
+echo "[Format code]"
+cargo fmt -v --all --check
+
+echo "[Lints]"
+cargo clippy
+"""
