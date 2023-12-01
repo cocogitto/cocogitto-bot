@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.2.1](https://github.com/cocogitto/cocogitto-bot/compare/0.2.0..0.2.1) - 2023-12-01
+#### Bug Fixes
+- remove useless docker entrypoint - ([a69a178](https://github.com/cocogitto/cocogitto-bot/commit/a69a17841e24dc26778661cfca85b472bda8dc82)) - [@oknozor](https://github.com/oknozor)
+#### Miscellaneous Chores
+- update cargo lock - ([9cb1503](https://github.com/cocogitto/cocogitto-bot/commit/9cb15030fca508c26cc2b90b2355089e28b48dde)) - [@oknozor](https://github.com/oknozor)
+
+- - -
+
 ## [0.2.0](https://github.com/cocogitto/cocogitto-bot/compare/0.1.0..0.2.0) - 2023-11-30
 #### Bug Fixes
 - base64-decode `cog.toml` contents - ([a71dada](https://github.com/cocogitto/cocogitto-bot/commit/a71dada3f72c2fcf48e876f079e986ec0881caa9)) - Mark S
