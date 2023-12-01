@@ -22,8 +22,6 @@ COPY --from=builder /cocogitto_github_app /usr/bin/cocogitto_github_app
 
 EXPOSE 8080
 
-COPY ./docker/entrypoint.sh /entrypoint.sh
 COPY ./config.example.toml ./config.toml
 
-CMD ["cocogitto_github_app"]
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["cocogitto_github_app"]
