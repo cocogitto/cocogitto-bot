@@ -81,6 +81,11 @@ async fn pull_request_handler(
         return Ok(());
     }
 
+    if event.check_suite.pull_requests.is_empty() {
+        info!("Ignoring non pull request check_suite event");
+        return Ok(());
+    }
+
     CocogittoBot::from_check_suite(event, &state.github_key)
         .await?
         .run()
