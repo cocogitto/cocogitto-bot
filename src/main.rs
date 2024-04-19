@@ -39,6 +39,8 @@ async fn main() -> anyhow::Result<()> {
     prometheus_exporter::init();
 
     let config = Settings::get()?;
+    info!("GH_KEY: \n{}", config.github_private_key);
+
     let addr = config.address();
 
     let router = Router::new()
