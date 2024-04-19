@@ -1,5 +1,5 @@
-use octocrab::checks::CheckRunStatus;
 use octocrab::models::checks::CheckRun;
+use octocrab::params::checks::CheckRunStatus;
 use serde::Serialize;
 use tracing::info;
 
@@ -10,12 +10,6 @@ pub struct CheckOutput {
     pub title: String,
     pub summary: String,
     pub text: String,
-}
-
-impl CheckOutput {
-    pub fn to_value(&self) -> serde_json::Value {
-        serde_json::to_value(self).expect("valid check run output")
-    }
 }
 
 const CHECK_RUN_NAME: &str = "cog-status-check";

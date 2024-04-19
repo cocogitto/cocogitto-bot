@@ -1,8 +1,8 @@
 use cocogitto::settings::Settings as CogSettings;
-use octocrab::checks::CheckRunStatus;
 use octocrab::models::checks::CheckRun;
 use octocrab::models::issues::Comment;
 use octocrab::models::repos::RepoCommit;
+use octocrab::params::checks::{CheckRunConclusion, CheckRunOutput, CheckRunStatus};
 use octocrab::Octocrab;
 use tokio::join;
 use tracing::{error, info, warn};
@@ -11,7 +11,6 @@ use event::CheckSuiteEvent;
 
 use crate::cog::report::CogBotReportBuilder;
 use crate::gh::authenticate::authenticate;
-use crate::gh::check_run::CheckOutput;
 use crate::gh::commits::GetCommits;
 
 pub mod authenticate;
@@ -167,16 +166,18 @@ impl CocogittoBot {
             report.build_comment_success()
         };
 
-        let summary = if report.has_error() {
-            "failure".to_string()
+        let (summary, conclusion) = if report.has_error() {
+            ("failure".to_string(), CheckRunConclusion::Failure)
         } else {
-            "success".to_string()
+            ("success".to_string(), CheckRunConclusion::Success)
         };
 
-        let check_output = CheckOutput {
+        let check_output = CheckRunOutput {
             title: format!("Cog status check #{}", self.pull_request_number.unwrap()),
             summary: summary.clone(),
-            text: comment.clone(),
+            text: Some(comment.clone()),
+            annotations: vec![],
+            images: vec![],
         };
 
         let issue_handler = self.inner.issues(&self.owner, &self.repo);
@@ -185,8 +186,8 @@ impl CocogittoBot {
         let (checks, comment) = join!(
             check_handler
                 .update_check_run(check_run.id)
-                .conclusion(&summary)
-                .output(check_output.to_value())
+                .conclusion(conclusion)
+                .output(check_output)
                 .status(CheckRunStatus::Completed)
                 .send(),
             issue_handler.create_comment(self.pull_request_number.unwrap(), &comment)
