@@ -76,7 +76,7 @@ jobs:
           command: build
           args: --target ${{ matrix.target }} --release
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
           path: ./target/${{ matrix.target }}/release/cocogitto_github_app
@@ -106,20 +106,19 @@ jobs:
         with:
           path: ~/artifacts
 
-      - run: ls ~/artifacts
-
       - name: Copy artifacts to build dir
         run: |
           mkdir -p target/x86_64-unknown-linux-musl/release/
+          cp -r /home/runner/artifacts/x86_64-unknown-linux-musl/cocogitto_github_app target/x86_64-unknown-linux-musl/release/cocogitto_github_app
+          chmod +x target/x86_64-unknown-linux-musl/release/cocogitto_github_app
+
           mkdir -p target/aarch64-unknown-linux-musl/release/
+          cp -r /home/runner/artifacts/aarch64-unknown-linux-musl/cocogitto_github_app target/aarch64-unknown-linux-musl/release/cocogitto_github_app
+          chmod +x target/aarch64-unknown-linux-musl/release/cocogitto_github_app
+          
           mkdir -p target/armv7-unknown-linux-musleabihf/release/
-          cp -r ~/artifacts/aarch64-unknown-linux-musl/* target/aarch64-unknown-linux-musl/release/
-          cp -r ~/artifacts/armv7-unknown-linux-musleabihf/* target/armv7-unknown-linux-musleabihf/release/
-          cp -r ~/artifacts/x86_64-unknown-linux-musl/* target/x86_64-unknown-linux-musl/release/
-          chmod +x -R  target/aarch64-unknown-linux-musl/release
-          chmod +x -R  target/armv7-unknown-linux-musleabihf/release
-          chmod +x -R  target/x86_64-unknown-linux-musl/release
-        working-directory: ./
+          cp -r /home/runner/artifacts/armv7-unknown-linux-musleabihf/cocogitto_github_app target/armv7-unknown-linux-musleabihf/release/cocogitto_github_app
+          chmod +x target/armv7-unknown-linux-musleabihf/release/cocogitto_github_app
 
       - if: ${{ github.ref_type == 'tag' }}
         name: Update multi-arch container latest

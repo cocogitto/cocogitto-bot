@@ -5,7 +5,7 @@ use octocrab::models::issues::Comment;
 use octocrab::models::repos::RepoCommit;
 use octocrab::Octocrab;
 use tokio::join;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use event::CheckSuiteEvent;
 
@@ -41,7 +41,12 @@ impl CocogittoBot {
         }
 
         info!("Authenticating to github api");
-        let inner = authenticate(installation.id, &repository.name, gh_key).await?;
+        let auth = authenticate(installation.id, &repository.name, gh_key).await;
+        if let Err(auth_error) = &auth {
+            error!("Failed to authenticate: {auth_error}");
+        }
+
+        let inner = auth?;
         let pull_request_number = check_suite
             .pull_requests
             .into_iter()
