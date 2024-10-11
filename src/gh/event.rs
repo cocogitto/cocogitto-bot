@@ -1,4 +1,12 @@
+use octocrab::models::webhook_events::payload::PullRequestWebhookEventPayload;
 use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Payload {
+    CheckSuite(CheckSuiteEvent),
+    PullRequest(PullRequestEvent),
+}
 
 #[derive(Debug, Deserialize)]
 pub struct CheckSuiteEvent {
@@ -18,7 +26,6 @@ pub enum CheckSuiteAction {
 
 #[derive(Debug, Deserialize)]
 pub struct CheckSuitePayload {
-    pub id: u64,
     pub pull_requests: Vec<PullRequest>,
     pub head_sha: String,
 }
@@ -43,4 +50,12 @@ pub struct RepositoryOwner {
 #[derive(Debug, Deserialize)]
 pub struct Installation {
     pub id: u64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PullRequestEvent {
+    pub installation: Installation,
+    #[serde(flatten)]
+    pub inner: PullRequestWebhookEventPayload,
+    pub repository: octocrab::models::Repository,
 }
