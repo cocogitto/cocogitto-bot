@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use cocogitto::settings::Settings as CogSettings;
 use octocrab::models::checks::CheckRun;
 use octocrab::models::issues::Comment;
@@ -12,6 +13,7 @@ use event::CheckSuiteEvent;
 use crate::cog::report::CogBotReportBuilder;
 use crate::gh::authenticate::authenticate;
 use crate::gh::commits::GetCommits;
+use crate::gh::event::PullRequestEvent;
 
 pub mod authenticate;
 pub mod check_run;
@@ -30,7 +32,7 @@ pub struct CocogittoBot {
 const COCOGITTO_BOT_LOGIN: &str = "cocogitto-bot[bot]";
 
 impl CocogittoBot {
-    pub async fn from_check_suite(event: CheckSuiteEvent, gh_key: &str) -> octocrab::Result<Self> {
+    pub async fn from_check_suite(event: CheckSuiteEvent, gh_key: &str) -> anyhow::Result<Self> {
         let check_suite = event.check_suite;
         let installation = event.installation;
         let repository = event.repository;
@@ -59,6 +61,37 @@ impl CocogittoBot {
             head_sha: check_suite.head_sha,
             pull_request_number,
             default_branch: repository.default_branch,
+        })
+    }
+
+    pub async fn from_pull_request(event: PullRequestEvent, gh_key: &str) -> anyhow::Result<Self> {
+        let installation = event.installation;
+        let repository = event.repository;
+
+        info!("Authenticating to github api");
+        let auth = authenticate(installation.id, &repository.name, gh_key).await;
+        if let Err(auth_error) = &auth {
+            return Err(anyhow!("Failed to authenticate: {auth_error}"));
+        }
+
+        let inner = auth?;
+        let pull_request_number = Some(event.inner.pull_request.number);
+
+        let Some(default_branch) = repository.default_branch else {
+            return Err(anyhow!("default_branch missing from pull_request event"));
+        };
+
+        let Some(owner) = repository.owner.map(|owner| owner.login) else {
+            return Err(anyhow!("owner missing from pull_request event"));
+        };
+
+        Ok(Self {
+            inner,
+            owner,
+            repo: repository.name,
+            head_sha: event.inner.pull_request.head.sha,
+            pull_request_number,
+            default_branch,
         })
     }
 

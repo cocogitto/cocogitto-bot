@@ -5,14 +5,15 @@ use axum::http::HeaderMap;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_macros::debug_handler;
+use gh::event::CheckSuiteAction;
+use octocrab::models::webhook_events::payload::PullRequestWebhookEventAction;
 use tower_http::trace::TraceLayer;
 use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-use gh::event::{CheckSuiteAction, CheckSuiteEvent};
-
 use crate::error::AppResult;
+use crate::gh::event::Payload;
 use crate::gh::CocogittoBot;
 use crate::settings::Settings;
 
@@ -64,32 +65,50 @@ async fn main() -> anyhow::Result<()> {
 async fn pull_request_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Json(event): Json<CheckSuiteEvent>,
+    Json(event): Json<Payload>,
 ) -> AppResult<()> {
     let Some(event_header) = headers.get("X-Github-Event") else {
         warn!("'X-Github-Event' header missing, ignoring request");
         return Ok(());
     };
 
-    let Ok("check_suite") = event_header.to_str() else {
-        info!("Ignoring non check_suite event");
-        return Ok(());
-    };
-
-    if event.action == CheckSuiteAction::Completed {
-        info!("Ignoring completed check_suite");
-        return Ok(());
+    match event_header.to_str() {
+        Ok("check_suite") | Ok("pull_request") => {}
+        _ => {
+            info!("Ignoring non check_suite event");
+            return Ok(());
+        }
     }
 
-    if event.check_suite.pull_requests.is_empty() {
-        info!("Ignoring non pull request check_suite event");
-        return Ok(());
-    }
+    match event {
+        Payload::CheckSuite(event) => {
+            if event.action == CheckSuiteAction::Completed {
+                info!("Ignoring completed check_suite");
+                return Ok(());
+            }
 
-    CocogittoBot::from_check_suite(event, &state.github_key)
-        .await?
-        .run()
-        .await?;
+            if event.check_suite.pull_requests.is_empty() {
+                info!("Ignoring non pull request check_suite event");
+                return Ok(());
+            }
+
+            CocogittoBot::from_check_suite(event, &state.github_key)
+                .await?
+                .run()
+                .await?;
+        }
+        Payload::PullRequest(event) => {
+            if event.inner.action != PullRequestWebhookEventAction::Opened {
+                info!("Ignoring pull_request event");
+                return Ok(());
+            }
+
+            CocogittoBot::from_pull_request(event, &state.github_key)
+                .await?
+                .run()
+                .await?;
+        }
+    }
 
     Ok(())
 }
