@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [0.3.0](https://github.com/cocogitto/cocogitto-bot/compare/0.2.1..0.3.0) - 2024-10-11
+#### Continuous Integration
+- fix docker build - ([00346cd](https://github.com/cocogitto/cocogitto-bot/commit/00346cd39fa2f9472bd6da7919f50e8df793b87f)) - [@oknozor](https://github.com/oknozor)
+#### Features
+- support pull request opened event - ([8f9f6f7](https://github.com/cocogitto/cocogitto-bot/commit/8f9f6f7b19e4be323d5cef4d80c9567dddd11a69)) - [@oknozor](https://github.com/oknozor)
+- ignore non pull-request check_suite - ([daaa405](https://github.com/cocogitto/cocogitto-bot/commit/daaa405d4e1848fe32ab572776298f5ace93ce7d)) - [@oknozor](https://github.com/oknozor)
+- fetch installation by id instead of pagination - ([79ce87c](https://github.com/cocogitto/cocogitto-bot/commit/79ce87caadc56194f3cb4a9a3f6f23f0f663ece4)) - [@oknozor](https://github.com/oknozor)
+- update cocogitto to 6.1.0 - ([948b606](https://github.com/cocogitto/cocogitto-bot/commit/948b6061161295d95c9b79c0643d97713fddf15c)) - [@oknozor](https://github.com/oknozor)
+#### Miscellaneous Chores
+- cargo update - ([ca3ff26](https://github.com/cocogitto/cocogitto-bot/commit/ca3ff264d8087519850438b67589b8979259ce26)) - [@oknozor](https://github.com/oknozor)
+
+- - -
+
 ## [0.2.1](https://github.com/cocogitto/cocogitto-bot/compare/0.2.0..0.2.1) - 2023-12-01
 #### Bug Fixes
 - remove useless docker entrypoint - ([a69a178](https://github.com/cocogitto/cocogitto-bot/commit/a69a17841e24dc26778661cfca85b472bda8dc82)) - [@oknozor](https://github.com/oknozor)
